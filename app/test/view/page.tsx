@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import ViewModelControls from "@/components/ViewModelControls";
+import IntegrationsPanel from "@/components/IntegrationsPanel";
 import type { ViewModelInstance } from "@rive-app/webgl2";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
@@ -77,8 +78,14 @@ function ViewPageContent() {
           />
         </main>
 
-        <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 overflow-y-auto">
+        <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 overflow-y-auto space-y-6">
           <ViewModelControls instance={viewModelInstance} properties={viewModelProperties} />
+          <IntegrationsPanel
+            url={url}
+            stateMachine={stateMachine}
+            viewModel={viewModel}
+            viewModelProperties={viewModelProperties}
+          />
           {viewModelProperties.length === 0 && viewModel && (
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-4">
               Ожидание загрузки переменных...

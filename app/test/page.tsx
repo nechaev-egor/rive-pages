@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import ViewModelControls from "@/components/ViewModelControls";
+import IntegrationsPanel from "@/components/IntegrationsPanel";
 import type { ViewModelInstance } from "@rive-app/webgl2";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
@@ -335,6 +336,14 @@ export default function TestPage() {
               <ViewModelControls
                 instance={activeTab.viewModelInstance}
                 properties={activeTab.viewModelProperties}
+              />
+            )}
+            {activeTab && (
+              <IntegrationsPanel
+                url={activeTab.url}
+                stateMachine={activeTab.stateMachine}
+                viewModel={activeTab.viewModel}
+                viewModelProperties={activeTab.viewModelProperties}
               />
             )}
             {activeTab && (
