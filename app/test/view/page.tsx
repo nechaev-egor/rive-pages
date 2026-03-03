@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import ViewModelControls from "@/components/ViewModelControls";
 import IntegrationsPanel from "@/components/IntegrationsPanel";
+import ResponsiveViewer from "@/components/ResponsiveViewer";
 import type { ViewModelInstance } from "@rive-app/webgl2";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
@@ -66,19 +67,21 @@ function ViewPageContent() {
         <div className="w-16" />
       </header>
 
-      <div className="flex-1 flex min-h-0">
-        <main className="flex-1 min-w-0 flex items-center justify-center p-4">
-          <RiveViewer
-            key={`${url}--${stateMachine}--${viewModel}`}
-            src={url}
-            stateMachines={stateMachine || undefined}
-            viewModel={viewModel || undefined}
-            onViewModelReady={handleViewModelReady}
-            className="w-full max-w-4xl aspect-video min-h-[300px]"
-          />
+      <div className="flex-1 flex flex-wrap min-h-0 overflow-x-auto">
+        <main className="flex-[1_0_auto] min-w-0 flex items-center justify-center p-4">
+          <ResponsiveViewer>
+            <RiveViewer
+              key={`${url}--${stateMachine}--${viewModel}`}
+              src={url}
+              stateMachines={stateMachine || undefined}
+              viewModel={viewModel || undefined}
+              onViewModelReady={handleViewModelReady}
+              className="w-full h-full rounded-lg"
+            />
+          </ResponsiveViewer>
         </main>
 
-        <aside className="w-80 shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 overflow-y-auto space-y-6">
+        <aside className="w-80 shrink-0 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 overflow-y-auto space-y-6">
           <ViewModelControls instance={viewModelInstance} properties={viewModelProperties} />
           <IntegrationsPanel
             url={url}

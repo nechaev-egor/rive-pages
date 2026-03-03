@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import ViewModelControls from "@/components/ViewModelControls";
 import IntegrationsPanel from "@/components/IntegrationsPanel";
+import ResponsiveViewer from "@/components/ResponsiveViewer";
 import type { ViewModelInstance } from "@rive-app/webgl2";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
@@ -168,9 +169,9 @@ export default function TestPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+      <main className="max-w-6xl mx-auto px-4 py-8 overflow-x-auto">
+        <div className="flex flex-wrap gap-8">
+          <div className="flex-[1_0_auto] min-w-0 space-y-4">
             <div className="flex gap-1 border-b border-zinc-200 dark:border-zinc-700 overflow-x-auto">
               {tabs.map((tab) => (
                 <div
@@ -204,14 +205,16 @@ export default function TestPage() {
             </div>
             {activeTab && (
               <>
-                <RiveViewer
-                  key={`${activeTab.url}--${activeTab.stateMachine}--${activeTab.viewModel}`}
-                  src={activeTab.url}
-                  stateMachines={activeTab.stateMachine || undefined}
-                  viewModel={activeTab.viewModel || undefined}
-                  onViewModelReady={handleViewModelReady(activeTab.id)}
-                  className="w-full aspect-video min-h-[400px]"
-                />
+                <ResponsiveViewer>
+                  <RiveViewer
+                    key={`${activeTab.url}--${activeTab.stateMachine}--${activeTab.viewModel}`}
+                    src={activeTab.url}
+                    stateMachines={activeTab.stateMachine || undefined}
+                    viewModel={activeTab.viewModel || undefined}
+                    onViewModelReady={handleViewModelReady(activeTab.id)}
+                    className="w-full h-full rounded-lg"
+                  />
+                </ResponsiveViewer>
                 <Link
                   href={`/test/view?${new URLSearchParams({
                     url: activeTab.url,
@@ -242,7 +245,7 @@ export default function TestPage() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="w-80 shrink-0 space-y-6">
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Загрузить файл
