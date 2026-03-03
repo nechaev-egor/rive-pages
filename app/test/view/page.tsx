@@ -8,6 +8,7 @@ import ViewModelControls from "@/components/ViewModelControls";
 import IntegrationsPanel from "@/components/IntegrationsPanel";
 import ResponsiveViewer from "@/components/ResponsiveViewer";
 import type { ViewModelInstance } from "@rive-app/webgl2";
+import { FIT_OPTIONS } from "@/components/RiveViewer";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
   ssr: false,
@@ -22,8 +23,13 @@ function ViewPageContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get("url") ?? "";
   const stateMachine = searchParams.get("stateMachine") ?? "";
+  const artboard = searchParams.get("artboard") ?? "";
   const viewModel = searchParams.get("viewModel") ?? "";
   const title = searchParams.get("title") ?? "Анимация";
+  const scaleParam = searchParams.get("scale");
+  const layoutScaleFactor = scaleParam ? Math.max(0.25, Math.min(3, parseFloat(scaleParam) || 1)) : 1;
+  const fitParam = searchParams.get("fit");
+  const fit = FIT_OPTIONS.find((o) => o.value === fitParam)?.fit ?? FIT_OPTIONS[1].fit;
 
   const [viewModelInstance, setViewModelInstance] = useState<ViewModelInstance | null>(null);
   const [viewModelProperties, setViewModelProperties] = useState<
@@ -69,12 +75,15 @@ function ViewPageContent() {
 
       <div className="flex-1 flex flex-wrap min-h-0 overflow-x-auto">
         <main className="flex-[1_0_auto] min-w-0 flex items-center justify-center p-4">
-          <ResponsiveViewer>
+          <ResponsiveViewer layoutScaleFactor={layoutScaleFactor}>
             <RiveViewer
-              key={`${url}--${stateMachine}--${viewModel}`}
+              key={`${url}--${stateMachine}--${viewModel}--${artboard}--${fitParam ?? "Contain"}`}
               src={url}
               stateMachines={stateMachine || undefined}
+              artboard={artboard?.trim() || undefined}
               viewModel={viewModel || undefined}
+              fit={fit}
+              layoutScaleFactor={layoutScaleFactor}
               onViewModelReady={handleViewModelReady}
               className="w-full h-full rounded-lg"
             />

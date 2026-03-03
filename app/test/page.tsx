@@ -6,6 +6,8 @@ import Link from "next/link";
 import ViewModelControls from "@/components/ViewModelControls";
 import IntegrationsPanel from "@/components/IntegrationsPanel";
 import ResponsiveViewer from "@/components/ResponsiveViewer";
+import type { RiveMetadata } from "@/components/RiveViewer";
+import { FIT_OPTIONS } from "@/components/RiveViewer";
 import type { ViewModelInstance } from "@rive-app/webgl2";
 
 const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
@@ -30,6 +32,8 @@ type Tab = {
   url: string;
   stateMachine: string;
   stateMachineInput: string;
+  artboard: string;
+  artboardInput: string;
   viewModel: string;
   viewModelInput: string;
   fileName: string | null;
@@ -37,6 +41,7 @@ type Tab = {
   title: string;
   viewModelInstance: ViewModelInstance | null;
   viewModelProperties: { name: string; type: number | string }[];
+  metadata: RiveMetadata | null;
 };
 
 function createTab(
@@ -44,18 +49,21 @@ function createTab(
   stateMachine: string,
   fileName: string | null,
   blobUrl?: string,
-  title?: string
+  title?: string,
+  id?: string
 ): Tab {
-  const id = crypto.randomUUID();
+  const tabId = id ?? crypto.randomUUID();
   const displayTitle =
     title ??
     fileName ??
     (url.startsWith("blob:") ? "Файл" : url.split("/").pop()?.split("?")[0] ?? "Анимация");
   return {
-    id,
+    id: tabId,
     url,
     stateMachine,
     stateMachineInput: stateMachine,
+    artboard: "",
+    artboardInput: "",
     viewModel: "",
     viewModelInput: "",
     fileName,
@@ -63,15 +71,20 @@ function createTab(
     title: displayTitle,
     viewModelInstance: null,
     viewModelProperties: [],
+    metadata: null,
   };
 }
 
+const INITIAL_TAB_ID = "initial-tab";
+
 export default function TestPage() {
   const [tabs, setTabs] = useState<Tab[]>(() => [
-    createTab(PRESETS[0].src, PRESETS[0].stateMachines, null, undefined, PRESETS[0].name),
+    createTab(PRESETS[0].src, PRESETS[0].stateMachines, null, undefined, PRESETS[0].name, INITIAL_TAB_ID),
   ]);
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? "");
   const [customUrl, setCustomUrl] = useState("");
+  const [layoutScaleFactor, setLayoutScaleFactor] = useState(1);
+  const [fit, setFit] = useState<(typeof FIT_OPTIONS)[number]["value"]>("Contain");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -92,7 +105,7 @@ export default function TestPage() {
   }, [tabs, activeTabId]);
 
   const updateActiveTab = useCallback(
-    (updates: Partial<Pick<Tab, "stateMachine" | "stateMachineInput" | "viewModel" | "viewModelInput" | "viewModelInstance" | "viewModelProperties">>) => {
+    (updates: Partial<Pick<Tab, "stateMachine" | "stateMachineInput" | "artboard" | "artboardInput" | "viewModel" | "viewModelInput" | "viewModelInstance" | "viewModelProperties" | "metadata">>) => {
       if (!activeTab) return;
       setTabs((prev) =>
         prev.map((t) => (t.id === activeTab.id ? { ...t, ...updates } : t))
@@ -109,6 +122,15 @@ export default function TestPage() {
             ? { ...t, viewModelInstance: instance, viewModelProperties: properties }
             : t
         )
+      );
+    },
+    []
+  );
+
+  const handleMetadataLoaded = useCallback(
+    (tabId: string) => (metadata: RiveMetadata) => {
+      setTabs((prev) =>
+        prev.map((t) => (t.id === tabId ? { ...t, metadata } : t))
       );
     },
     []
@@ -142,10 +164,15 @@ export default function TestPage() {
     if (activeTab) updateActiveTab({ stateMachine: activeTab.stateMachineInput });
   };
 
+  const applyArtboard = () => {
+    if (activeTab) updateActiveTab({ artboard: activeTab.artboardInput });
+  };
+
   const applyViewModel = () => {
     if (activeTab) {
       updateActiveTab({
         viewModel: activeTab.viewModelInput,
+        artboard: activeTab.artboardInput || activeTab.artboard,
         viewModelInstance: null,
         viewModelProperties: [],
       });
@@ -205,12 +232,16 @@ export default function TestPage() {
             </div>
             {activeTab && (
               <>
-                <ResponsiveViewer>
+                <ResponsiveViewer layoutScaleFactor={layoutScaleFactor}>
                   <RiveViewer
-                    key={`${activeTab.url}--${activeTab.stateMachine}--${activeTab.viewModel}`}
+                    key={`${activeTab.url}--${activeTab.stateMachine}--${activeTab.viewModel}--${activeTab.artboard}--${fit}`}
                     src={activeTab.url}
                     stateMachines={activeTab.stateMachine || undefined}
+                    artboard={activeTab.artboard?.trim() || undefined}
                     viewModel={activeTab.viewModel || undefined}
+                    fit={FIT_OPTIONS.find((o) => o.value === fit)?.fit ?? FIT_OPTIONS[0].fit}
+                    layoutScaleFactor={layoutScaleFactor}
+                    onMetadataLoaded={handleMetadataLoaded(activeTab.id)}
                     onViewModelReady={handleViewModelReady(activeTab.id)}
                     className="w-full h-full rounded-lg"
                   />
@@ -219,8 +250,11 @@ export default function TestPage() {
                   href={`/test/view?${new URLSearchParams({
                     url: activeTab.url,
                     stateMachine: activeTab.stateMachine,
+                    artboard: activeTab.artboard,
                     viewModel: activeTab.viewModel,
                     title: activeTab.title,
+                    scale: String(layoutScaleFactor),
+                    fit,
                   }).toString()}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -246,6 +280,44 @@ export default function TestPage() {
           </div>
 
           <div className="w-80 shrink-0 space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                Fit
+              </label>
+              <select
+                value={fit}
+                onChange={(e) => setFit(e.target.value as (typeof FIT_OPTIONS)[number]["value"])}
+                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
+              >
+                {FIT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                Масштаб (layoutScaleFactor)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="0.25"
+                  max="3"
+                  step="0.05"
+                  value={layoutScaleFactor}
+                  onChange={(e) => setLayoutScaleFactor(parseFloat(e.target.value))}
+                  className="flex-1 h-2 rounded-lg appearance-none bg-zinc-200 dark:bg-zinc-700 accent-zinc-900 dark:accent-zinc-100"
+                />
+                <span className="w-12 text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
+                  {layoutScaleFactor.toFixed(2)}×
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Только для Fit.Layout
+              </p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Загрузить файл
@@ -295,45 +367,133 @@ export default function TestPage() {
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 State Machine (опционально)
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={activeTab?.stateMachineInput ?? ""}
-                  onChange={(e) => updateActiveTab({ stateMachineInput: e.target.value })}
-                  placeholder="Название State Machine"
-                  className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
-                  disabled={!activeTab}
-                />
-                <button
-                  onClick={applyStateMachine}
-                  className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
+              {activeTab?.metadata?.stateMachines && activeTab.metadata.stateMachines.length > 0 ? (
+                <select
+                  value={activeTab.stateMachine}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateActiveTab({ stateMachineInput: v, stateMachine: v });
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                   disabled={!activeTab}
                 >
-                  Применить
-                </button>
-              </div>
+                  <option value="">— Не выбрано —</option>
+                  {[...new Set(activeTab.metadata.stateMachines.map((sm) => sm.name))].map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={activeTab?.stateMachineInput ?? ""}
+                    onChange={(e) => updateActiveTab({ stateMachineInput: e.target.value })}
+                    placeholder="Название State Machine"
+                    className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
+                    disabled={!activeTab}
+                  />
+                  <button
+                    onClick={applyStateMachine}
+                    className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
+                    disabled={!activeTab}
+                  >
+                    Применить
+                  </button>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                Artboard (опционально)
+              </label>
+              {activeTab?.metadata?.artboards && activeTab.metadata.artboards.length > 0 ? (
+                <select
+                  value={activeTab.artboard}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateActiveTab({ artboardInput: v, artboard: v });
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
+                  disabled={!activeTab}
+                >
+                  <option value="">— Не выбрано —</option>
+                  {activeTab.metadata.artboards.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={activeTab?.artboardInput ?? ""}
+                    onChange={(e) => updateActiveTab({ artboardInput: e.target.value })}
+                    placeholder="Website development"
+                    className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
+                    disabled={!activeTab}
+                  />
+                  <button
+                    onClick={applyArtboard}
+                    className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
+                    disabled={!activeTab}
+                  >
+                    Применить
+                  </button>
+                </div>
+              )}
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Укажите артборд с ViewModel, чтобы избежать ошибок
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 ViewModel (опционально)
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={activeTab?.viewModelInput ?? ""}
-                  onChange={(e) => updateActiveTab({ viewModelInput: e.target.value })}
-                  placeholder="ViewModel1"
-                  className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
-                  disabled={!activeTab}
-                />
-                <button
-                  onClick={applyViewModel}
-                  className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
+              {activeTab?.metadata?.viewModels && activeTab.metadata.viewModels.length > 0 ? (
+                <select
+                  value={activeTab.viewModel}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateActiveTab({
+                      viewModelInput: v,
+                      viewModel: v,
+                      artboard: activeTab.artboardInput || activeTab.artboard,
+                      viewModelInstance: null,
+                      viewModelProperties: [],
+                    });
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                   disabled={!activeTab}
                 >
-                  Применить
-                </button>
-              </div>
+                  <option value="">— Не выбрано —</option>
+                  {activeTab.metadata.viewModels.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={activeTab?.viewModelInput ?? ""}
+                    onChange={(e) => updateActiveTab({ viewModelInput: e.target.value })}
+                    placeholder="ViewModel1"
+                    className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
+                    disabled={!activeTab}
+                  />
+                  <button
+                    onClick={applyViewModel}
+                    className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
+                    disabled={!activeTab}
+                  >
+                    Применить
+                  </button>
+                </div>
+              )}
             </div>
             {activeTab && (
               <ViewModelControls

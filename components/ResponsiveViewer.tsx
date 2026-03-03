@@ -29,9 +29,11 @@ function calcFitSize(containerW: number): { width: number; height: number } {
 interface ResponsiveViewerProps {
   children: React.ReactNode;
   className?: string;
+  /** Масштаб Rive: 0.25 → viewport больше, 3 → viewport меньше */
+  layoutScaleFactor?: number;
 }
 
-export default function ResponsiveViewer({ children, className = "" }: ResponsiveViewerProps) {
+export default function ResponsiveViewer({ children, className = "", layoutScaleFactor = 1 }: ResponsiveViewerProps) {
   const [size, setSize] = useState<{ width: number; height: number }>(() =>
     calcFitSize(MAX_LAYOUT_WIDTH)
   );
@@ -41,12 +43,11 @@ export default function ResponsiveViewer({ children, className = "" }: Responsiv
   const initialSizeSetRef = useRef(false);
   type ResizeEdge = "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
   const [isResizing, setIsResizing] = useState(false);
-  const [containerWidth, setContainerWidth] = useState<number | null>(() =>
-    typeof window !== "undefined" ? Math.min(window.innerWidth, MAX_LAYOUT_WIDTH) : null
-  );
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const startRef = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const edgeRef = useRef<ResizeEdge>("se");
   const containerRef = useRef<HTMLDivElement>(null);
+  const [resizeKey, setResizeKey] = useState(0);
 
   const measureWidth = useCallback(() => {
     const el = containerRef.current;
@@ -102,6 +103,7 @@ export default function ResponsiveViewer({ children, className = "" }: Responsiv
     if (p) {
       setSize({ width: p.width, height: p.height });
       setActivePreset(id);
+      setResizeKey((k) => k + 1);
     }
   }, []);
 
@@ -134,7 +136,10 @@ export default function ResponsiveViewer({ children, className = "" }: Responsiv
       setActivePreset("custom");
     };
 
-    const onUp = () => setIsResizing(false);
+    const onUp = () => {
+      setIsResizing(false);
+      setResizeKey((k) => k + 1);
+    };
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -163,7 +168,7 @@ export default function ResponsiveViewer({ children, className = "" }: Responsiv
           </button>
         ))}
         <span className="text-xs text-zinc-500 dark:text-zinc-400 ml-1">
-          {size.width} × {size.height}
+          {Math.round(scaledWidth / layoutScaleFactor)} × {Math.round(scaledHeight / layoutScaleFactor)}
         </span>
       </div>
 
@@ -175,6 +180,7 @@ export default function ResponsiveViewer({ children, className = "" }: Responsiv
           value={{ width: scaledWidth, height: scaledHeight }}
         >
           <div
+            key={resizeKey}
             className="absolute left-0 top-0 w-full h-full [&>*]:!w-full [&>*]:!h-full [&>*]:!min-w-0 [&>*]:!min-h-0"
             style={{ width: scaledWidth, height: scaledHeight }}
           >
