@@ -58,7 +58,7 @@ export function MyRiveAnimation() {
 `;
 
   if (hasViewModel && properties.length > 0) {
-    code += `\n// С ViewModel и переменными:\n\n`;
+    code += `\n// With ViewModel and variables:\n\n`;
     code += `import { useRive, useViewModel, useViewModelInstance`;
     const hooks = new Set<string>();
     properties.forEach((p) => {
@@ -132,7 +132,7 @@ export function MyRiveWithViewModel() {
   return (
     <div>
       <RiveComponent className="w-full h-full" />
-      {/* Изменение: setValue(newVal), trigger?.(), setRgb(r,g,b) */}
+      {/* Update: setValue(newVal), trigger?.(), setRgb(r,g,b) */}
     </div>
   );
 }
@@ -168,7 +168,7 @@ const ${vmVar} = rive.viewModelByName("${viewModel}").defaultInstance();
 `;
     if (properties.length > 0) {
       code += `
-// Переменные (${properties.length}):\n`;
+// Variables (${properties.length}):\n`;
       properties.forEach((prop) => {
         const t = getPropType(prop);
         const path = prop.name;
@@ -186,12 +186,12 @@ const ${vmVar} = rive.viewModelByName("${viewModel}").defaultInstance();
         } else if (t === "color") {
           code += `let ${safeName} = ${vmVar}.color("${path}"); // ${safeName}.value, setRgb(r,g,b)\n`;
         } else {
-          code += `// ${vmVar}.?("${path}") - тип: ${t}\n`;
+          code += `// ${vmVar}.?("${path}") - type: ${t}\n`;
         }
       });
     } else {
       code += `
-// Методы: .number("path"), .string("path"), .boolean("path"), .trigger("path"), .enum("path"), .color("path")
+// Methods: .number("path"), .string("path"), .boolean("path"), .trigger("path"), .enum("path"), .color("path")
 `;
     }
   }
@@ -211,7 +211,7 @@ function CopyButton({ text }: { text: string }) {
       }}
       className="absolute top-2 right-2 px-2 py-1 rounded text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
     >
-      {copied ? "Скопировано" : "Копировать"}
+      {copied ? "Copied" : "Copy"}
     </button>
   );
 }
@@ -240,7 +240,7 @@ export default function IntegrationsPanel({
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Интеграции
+        Integrations
       </p>
       <div className="space-y-2">
         {integrations.map(({ id, name, code }) => (
@@ -266,7 +266,7 @@ export default function IntegrationsPanel({
       </div>
       {viewModel && viewModelProperties.length > 0 && (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Переменные ViewModel ({viewModelProperties.length}):{" "}
+          ViewModel variables ({viewModelProperties.length}):{" "}
           {viewModelProperties.map((p) => p.name).join(", ")}
         </p>
       )}

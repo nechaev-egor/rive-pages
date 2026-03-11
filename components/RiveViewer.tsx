@@ -28,9 +28,9 @@ interface RiveViewerProps {
   artboard?: string;
   viewModel?: string;
   className?: string;
-  /** Fit mode: Layout, Contain, Cover и др. */
+  /** Fit mode: Layout, Contain, Cover, etc. */
   fit?: (typeof FIT_OPTIONS)[number]["fit"];
-  /** Масштаб layout (только для Fit.Layout). По умолчанию 1 */
+  /** Layout scale (only for Fit.Layout). Default 1 */
   layoutScaleFactor?: number;
   onLoad?: () => void;
   onMetadataLoaded?: (metadata: RiveMetadata) => void;
@@ -76,7 +76,7 @@ export default function RiveViewer({
   onMetadataLoadedRef.current = onMetadataLoaded;
   onViewModelReadyRef.current = onViewModelReady;
 
-  // Обновить layout при смене fit или layoutScaleFactor
+  // Update layout when fit or layoutScaleFactor changes
   useEffect(() => {
     if (!rive) return;
     rive.layout = new Layout({
@@ -87,7 +87,7 @@ export default function RiveViewer({
     rive.resizeDrawingSurfaceToCanvas?.() ?? rive.resizeToCanvas?.();
   }, [rive, fit, layoutScaleFactor]);
 
-  // Как в примере: resizeDrawingSurfaceToCanvas в onLoad и при resize
+  // As in example: resizeDrawingSurfaceToCanvas on load and resize
   useEffect(() => {
     if (!rive || !containerRef.current) return;
     const resize = () => rive.resizeDrawingSurfaceToCanvas?.() ?? rive.resizeToCanvas?.();

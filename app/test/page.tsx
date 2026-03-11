@@ -14,7 +14,7 @@ const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-96 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-      <span className="text-zinc-500">Загрузка Rive...</span>
+      <span className="text-zinc-500">Loading Rive...</span>
     </div>
   ),
 });
@@ -56,7 +56,7 @@ function createTab(
   const displayTitle =
     title ??
     fileName ??
-    (url.startsWith("blob:") ? "Файл" : url.split("/").pop()?.split("?")[0] ?? "Анимация");
+    (url.startsWith("blob:") ? "File" : url.split("/").pop()?.split("?")[0] ?? "Animation");
   return {
     id: tabId,
     url,
@@ -151,7 +151,7 @@ export default function TestPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith(".riv")) {
-      alert("Выберите файл .riv");
+      alert("Please select a .riv file");
       return;
     }
     const blobUrl = URL.createObjectURL(file);
@@ -187,10 +187,10 @@ export default function TestPage() {
             href="/"
             className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
           >
-            ← Назад
+            ← Back
           </Link>
           <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Тестирование Rive
+            Rive Testing
           </h1>
           <div className="w-20" />
         </div>
@@ -222,7 +222,7 @@ export default function TestPage() {
                         closeTab(tab.id);
                       }}
                       className="shrink-0 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 opacity-60 hover:opacity-100"
-                      aria-label="Закрыть"
+                      aria-label="Close"
                     >
                       ×
                     </button>
@@ -260,7 +260,7 @@ export default function TestPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-sm font-medium transition-colors"
                 >
-                  Полный просмотр →
+                  Full view →
                 </Link>
               </>
             )}
@@ -298,7 +298,7 @@ export default function TestPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Масштаб (layoutScaleFactor)
+                Scale (layoutScaleFactor)
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -315,12 +315,12 @@ export default function TestPage() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Только для Fit.Layout
+                Only for Fit.Layout
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Загрузить файл
+                Load file
               </label>
               <input
                 ref={fileInputRef}
@@ -334,15 +334,15 @@ export default function TestPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-600 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 text-sm font-medium transition-colors"
               >
-                Выбрать .riv файл
+                Select .riv file
               </button>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Добавляет новую вкладку
+                Adds a new tab
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Загрузить по URL
+                Load by URL
               </label>
               <div className="flex gap-2">
                 <input
@@ -356,16 +356,16 @@ export default function TestPage() {
                   onClick={loadCustom}
                   className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90"
                 >
-                  Загрузить
+                  Load
                 </button>
               </div>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Добавляет новую вкладку
+                Adds a new tab
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                State Machine (опционально)
+                State Machine (optional)
               </label>
               {activeTab?.metadata?.stateMachines && activeTab.metadata.stateMachines.length > 0 ? (
                 <select
@@ -377,7 +377,7 @@ export default function TestPage() {
                   className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                   disabled={!activeTab}
                 >
-                  <option value="">— Не выбрано —</option>
+                  <option value="">— Not selected —</option>
                   {[...new Set(activeTab.metadata.stateMachines.map((sm) => sm.name))].map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -390,7 +390,7 @@ export default function TestPage() {
                     type="text"
                     value={activeTab?.stateMachineInput ?? ""}
                     onChange={(e) => updateActiveTab({ stateMachineInput: e.target.value })}
-                    placeholder="Название State Machine"
+                    placeholder="State Machine name"
                     className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                     disabled={!activeTab}
                   />
@@ -399,14 +399,14 @@ export default function TestPage() {
                     className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
                     disabled={!activeTab}
                   >
-                    Применить
+                    Apply
                   </button>
                 </div>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Artboard (опционально)
+                Artboard (optional)
               </label>
               {activeTab?.metadata?.artboards && activeTab.metadata.artboards.length > 0 ? (
                 <select
@@ -418,7 +418,7 @@ export default function TestPage() {
                   className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                   disabled={!activeTab}
                 >
-                  <option value="">— Не выбрано —</option>
+                  <option value="">— Not selected —</option>
                   {activeTab.metadata.artboards.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -440,17 +440,17 @@ export default function TestPage() {
                     className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
                     disabled={!activeTab}
                   >
-                    Применить
+                    Apply
                   </button>
                 </div>
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Укажите артборд с ViewModel, чтобы избежать ошибок
+                Specify artboard with ViewModel to avoid errors
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                ViewModel (опционально)
+                ViewModel (optional)
               </label>
               {activeTab?.metadata?.viewModels && activeTab.metadata.viewModels.length > 0 ? (
                 <select
@@ -468,7 +468,7 @@ export default function TestPage() {
                   className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm"
                   disabled={!activeTab}
                 >
-                  <option value="">— Не выбрано —</option>
+                  <option value="">— Not selected —</option>
                   {activeTab.metadata.viewModels.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -490,7 +490,7 @@ export default function TestPage() {
                     className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-medium text-sm hover:opacity-90 shrink-0 disabled:opacity-50"
                     disabled={!activeTab}
                   >
-                    Применить
+                    Apply
                   </button>
                 </div>
               )}
@@ -512,10 +512,10 @@ export default function TestPage() {
             {activeTab && (
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 <p className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                  Вкладка: {activeTab.title}
+                  Tab: {activeTab.title}
                 </p>
                 <p className="break-all text-xs">
-                  {activeTab.fileName ?? (activeTab.url.startsWith("blob:") ? "Локальный файл" : activeTab.url)}
+                  {activeTab.fileName ?? (activeTab.url.startsWith("blob:") ? "Local file" : activeTab.url)}
                 </p>
               </div>
             )}

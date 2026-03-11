@@ -29,7 +29,7 @@ function calcFitSize(containerW: number): { width: number; height: number } {
 interface ResponsiveViewerProps {
   children: React.ReactNode;
   className?: string;
-  /** Масштаб Rive: 0.25 → viewport больше, 3 → viewport меньше */
+  /** Rive scale: 0.25 → larger viewport, 3 → smaller viewport */
   layoutScaleFactor?: number;
 }
 
@@ -152,7 +152,7 @@ export default function ResponsiveViewer({ children, className = "", layoutScale
   return (
     <div ref={containerRef} className={`space-y-3 w-full min-w-0 ${className}`}>
       <div className="flex flex-wrap items-center gap-2 shrink-0">
-        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Разрешение:</span>
+        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Resolution:</span>
         {PRESETS.map((p) => (
           <button
             key={p.id}
@@ -227,7 +227,7 @@ export default function ResponsiveViewer({ children, className = "", layoutScale
                 isResizing ? "bg-zinc-500 dark:bg-zinc-500" : ""
               }`}
               style={{ cursor }}
-              aria-label={`Изменить размер (${edge})`}
+              aria-label={`Resize (${edge})`}
             >
               {["nw", "ne", "sw", "se"].includes(edge) && (
                 <svg

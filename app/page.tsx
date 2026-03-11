@@ -8,17 +8,17 @@ export default function Home() {
           Rive Animation Tester
         </h1>
         <p className="text-lg text-zinc-600 dark:text-zinc-400">
-         Игорь ты можешь тестить и показывать Rive анимации в браузере. Загружайте по URL или выбирайте
-          готовые примеры.
+          Test and showcase Rive animations in the browser. Load by URL or choose from
+          ready-made examples.
         </p>
         <Link
           href="/test"
           className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 dark:bg-zinc-100 px-8 py-4 text-lg font-medium text-white dark:text-zinc-900 hover:opacity-90 transition-opacity"
         >
-          Открыть тестер →
+          Open tester →
         </Link>
         <div className="pt-8 text-sm text-zinc-500 dark:text-zinc-400">
-          <p>Поддерживаются .riv файлы с CDN или локальной загрузки.</p>
+          <p>Supports .riv files from CDN or local upload.</p>
           <p className="mt-1">
             <a
               href="https://rive.app/community/"
@@ -28,7 +28,7 @@ export default function Home() {
             >
               Rive Community
             </a>{" "}
-            — примеры анимаций
+            — animation examples
           </p>
         </div>
       </main>

@@ -14,7 +14,7 @@ const RiveViewer = dynamic(() => import("@/components/RiveViewer"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full min-h-[50vh] flex items-center justify-center bg-zinc-100 dark:bg-zinc-900">
-      <span className="text-zinc-500">Загрузка...</span>
+      <span className="text-zinc-500">Loading...</span>
     </div>
   ),
 });
@@ -25,7 +25,7 @@ function ViewPageContent() {
   const stateMachine = searchParams.get("stateMachine") ?? "";
   const artboard = searchParams.get("artboard") ?? "";
   const viewModel = searchParams.get("viewModel") ?? "";
-  const title = searchParams.get("title") ?? "Анимация";
+  const title = searchParams.get("title") ?? "Animation";
   const scaleParam = searchParams.get("scale");
   const layoutScaleFactor = scaleParam ? Math.max(0.25, Math.min(3, parseFloat(scaleParam) || 1)) : 1;
   const fitParam = searchParams.get("fit");
@@ -47,12 +47,12 @@ function ViewPageContent() {
   if (!url) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-zinc-50 dark:bg-zinc-950">
-        <p className="text-zinc-600 dark:text-zinc-400">Нет данных для отображения</p>
+        <p className="text-zinc-600 dark:text-zinc-400">No data to display</p>
         <Link
           href="/test"
           className="text-zinc-900 dark:text-zinc-100 underline hover:no-underline"
         >
-          ← Вернуться к тестеру
+          ← Back to tester
         </Link>
       </div>
     );
@@ -65,7 +65,7 @@ function ViewPageContent() {
           href="/test"
           className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 text-sm"
         >
-          ← Тестер
+          ← Tester
         </Link>
         <h1 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[60%]">
           {decodeURIComponent(title)}
@@ -100,12 +100,12 @@ function ViewPageContent() {
           />
           {viewModelProperties.length === 0 && viewModel && (
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-4">
-              Ожидание загрузки переменных...
+              Waiting for variables to load...
             </p>
           )}
           {!viewModel && (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Укажите ViewModel в тестере и откройте полный просмотр снова.
+              Specify ViewModel in the tester and open full view again.
             </p>
           )}
         </aside>
@@ -119,7 +119,7 @@ export default function ViewPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-          <span className="text-zinc-500">Загрузка...</span>
+          <span className="text-zinc-500">Loading...</span>
         </div>
       }
     >

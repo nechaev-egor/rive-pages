@@ -178,12 +178,12 @@ export default function ViewModelControls({ instance, properties }: ViewModelCon
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-        Переменные ViewModel ({filtered.length}{filter ? ` / ${properties.length}` : ""})
+        ViewModel variables ({filtered.length}{filter ? ` / ${properties.length}` : ""})
       </p>
       {properties.length > 5 && (
         <input
           type="text"
-          placeholder="Поиск по имени..."
+          placeholder="Search by name..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="w-full px-2 py-1.5 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-sm"
@@ -194,7 +194,7 @@ export default function ViewModelControls({ instance, properties }: ViewModelCon
           <PropertyControl key={prop.name} instance={instance} prop={prop} />
         ))}
         {filtered.length === 0 && (
-          <p className="text-xs text-zinc-500">Нет совпадений</p>
+          <p className="text-xs text-zinc-500">No matches</p>
         )}
       </div>
     </div>
