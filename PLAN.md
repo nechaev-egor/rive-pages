@@ -1,62 +1,62 @@
-# План: Сайт для тестирования Rive анимаций
+# Plan: Rive Animation Testing Site
 
-## Обзор проекта
+## Project Overview
 
-**Цель:** Создать веб-приложение для тестирования и демонстрации Rive анимаций.
+**Goal:** Create a web application for testing and showcasing Rive animations.
 
-**Стек:**
+**Stack:**
 - **Framework:** Next.js 15 (App Router)
 - **Rive:** @rive-app/react-webgl2
-- **Деплой:** Vercel
+- **Deploy:** Vercel
 
 ---
 
-## Этапы разработки
+## Development Stages
 
-### Этап 1: Инициализация проекта
-- [ ] Создать Next.js проект (`npx create-next-app@latest`)
-- [ ] Установить `@rive-app/react-webgl2`
-- [ ] Настроить TypeScript, ESLint, Tailwind CSS
-- [ ] Подготовить структуру папок
+### Stage 1: Project Initialization
+- [ ] Create Next.js project (`npx create-next-app@latest`)
+- [ ] Install `@rive-app/react-webgl2`
+- [ ] Configure TypeScript, ESLint, Tailwind CSS
+- [ ] Prepare folder structure
 
-### Этап 2: Базовая интеграция Rive
-- [ ] Создать клиентский компонент для Rive (важно: Rive использует WebGL, нужен `"use client"`)
-- [ ] Реализовать простой просмотрщик анимации с URL/файлом
-- [ ] Добавить поддержку State Machines и Animations
-- [ ] Обработать SSR (dynamic import или lazy loading для Rive)
+### Stage 2: Basic Rive Integration
+- [ ] Create client component for Rive (important: Rive uses WebGL, needs `"use client"`)
+- [ ] Implement simple animation viewer with URL/file
+- [ ] Add support for State Machines and Animations
+- [ ] Handle SSR (dynamic import or lazy loading for Rive)
 
-### Этап 3: Функционал тестирования
-- [ ] **Загрузка анимаций:**
-  - По URL (CDN, например cdn.rive.app)
-  - Загрузка .riv файла с устройства
-- [ ] **Управление воспроизведением:**
+### Stage 3: Testing Features
+- [ ] **Load animations:**
+  - By URL (CDN, e.g. cdn.rive.app)
+  - Upload .riv file from device
+- [ ] **Playback control:**
   - Play / Pause
-  - Перемотка (scrub)
-  - Скорость воспроизведения
-- [ ] **Параметры State Machine:**
-  - Динамический UI для inputs (Number, Boolean, Trigger)
-  - Список доступных artboards и анимаций
-- [ ] **Настройки отображения:**
+  - Scrub
+  - Playback speed
+- [ ] **State Machine parameters:**
+  - Dynamic UI for inputs (Number, Boolean, Trigger)
+  - List of available artboards and animations
+- [ ] **Display settings:**
   - Fit (Contain, Cover, Fill, FitWidth, FitHeight)
   - Alignment
-  - Размер canvas
+  - Canvas size
 
-### Этап 4: UI и UX
-- [ ] Главная страница со списком примеров
-- [ ] Страница тестирования с панелью управления
-- [ ] Адаптивный дизайн
-- [ ] Тёмная/светлая тема (опционально)
+### Stage 4: UI and UX
+- [ ] Home page with example list
+- [ ] Testing page with control panel
+- [ ] Responsive design
+- [ ] Dark/light theme (optional)
 
-### Этап 5: Деплой на Vercel
-- [ ] Подключить репозиторий к Vercel
-- [ ] Настроить переменные окружения (если нужны)
-- [ ] Проверить сборку и работу на production
+### Stage 5: Deploy to Vercel
+- [ ] Connect repository to Vercel
+- [ ] Configure environment variables (if needed)
+- [ ] Verify build and production run
 
 ---
 
-## Что нам понадобится
+## What We Need
 
-### Зависимости (package.json)
+### Dependencies (package.json)
 ```json
 {
   "dependencies": {
@@ -75,58 +75,58 @@
 }
 ```
 
-### Важные технические моменты
+### Important Technical Notes
 
-1. **Client Components:** Rive использует WebGL и DOM API — все компоненты с Rive должны быть `"use client"`.
+1. **Client Components:** Rive uses WebGL and DOM API — all components with Rive must be `"use client"`.
 
-2. **WASM:** Rive загружает WASM. Для ускорения можно:
-   - Self-host WASM файл в `/public`
-   - Использовать preload (см. [документацию](https://rive.app/docs/runtimes/web/preloading-wasm))
+2. **WASM:** Rive loads WASM. To speed up:
+   - Self-host WASM file in `/public`
+   - Use preload (see [documentation](https://rive.app/docs/runtimes/web/preloading-wasm))
 
-3. **Next.js + Rive:** Избегать SSR для Rive — использовать dynamic import с `ssr: false`:
+3. **Next.js + Rive:** Avoid SSR for Rive — use dynamic import with `ssr: false`:
    ```tsx
    const RiveComponent = dynamic(() => import('@/components/RiveViewer'), { ssr: false });
    ```
 
-4. **Vercel:** Next.js отлично работает на Vercel из коробки. Ограничений по Rive нет.
+4. **Vercel:** Next.js works great on Vercel out of the box. No Rive limitations.
 
-### Структура проекта (предлагаемая)
+### Project Structure (proposed)
 ```
 rive-pages/
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx              # Главная
+│   ├── page.tsx              # Home
 │   ├── test/
-│   │   └── page.tsx           # Страница тестирования
+│   │   └── page.tsx           # Testing page
 │   └── globals.css
 ├── components/
-│   ├── RiveViewer.tsx         # Основной компонент просмотра
-│   ├── RiveControls.tsx       # Панель управления
-│   └── AnimationPicker.tsx    # Выбор/загрузка анимации
+│   ├── RiveViewer.tsx         # Main viewer component
+│   ├── RiveControls.tsx       # Control panel
+│   └── AnimationPicker.tsx    # Animation picker/upload
 ├── public/
-│   └── (примеры .riv файлов, опционально)
+│   └── (example .riv files, optional)
 ├── package.json
 ├── next.config.ts
 └── tailwind.config.ts
 ```
 
-### Примеры анимаций для тестов
+### Animation Examples for Testing
 - `https://cdn.rive.app/animations/vehicles.riv` — State Machine "bumpy"
 - `https://cdn.rive.app/animations/off_road_car.riv`
-- Собственные .riv файлы из [Rive Community](https://rive.app/community/)
+- Your own .riv files from [Rive Community](https://rive.app/community/)
 
 ---
 
-## Оценка времени
-- Этап 1: ~15 мин
-- Этап 2: ~30 мин  
-- Этап 3: ~1–2 часа
-- Этап 4: ~1 час
-- Этап 5: ~15 мин
+## Time Estimate
+- Stage 1: ~15 min
+- Stage 2: ~30 min  
+- Stage 3: ~1–2 hours
+- Stage 4: ~1 hour
+- Stage 5: ~15 min
 
-**Итого:** ~3–4 часа на MVP
+**Total:** ~3–4 hours for MVP
 
 ---
 
-## Следующий шаг
-Начать с Этапа 1 — инициализация Next.js проекта и установка зависимостей.
+## Next Step
+Start with Stage 1 — Next.js project initialization and dependency installation.

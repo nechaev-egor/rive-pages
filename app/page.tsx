@@ -11,12 +11,20 @@ export default function Home() {
           Test and showcase Rive animations in the browser. Load by URL or choose from
           ready-made examples.
         </p>
-        <Link
-          href="/test"
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 dark:bg-zinc-100 px-8 py-4 text-lg font-medium text-white dark:text-zinc-900 hover:opacity-90 transition-opacity"
-        >
-          Open tester →
-        </Link>
+        <div className="flex gap-4 justify-center flex-wrap">
+          <Link
+            href="/test"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 dark:bg-zinc-100 px-8 py-4 text-lg font-medium text-white dark:text-zinc-900 hover:opacity-90 transition-opacity"
+          >
+            Open tester →
+          </Link>
+          <Link
+            href="/docs"
+            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-zinc-300 dark:border-zinc-600 px-8 py-4 text-lg font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
+          >
+            Documentation →
+          </Link>
+        </div>
         <div className="pt-8 text-sm text-zinc-500 dark:text-zinc-400">
           <p>Supports .riv files from CDN or local upload.</p>
           <p className="mt-1">

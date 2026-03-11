@@ -1,31 +1,31 @@
 # Rive Animation Tester
 
-Сайт для тестирования и демонстрации Rive анимаций. Next.js + Vercel.
+A site for testing and showcasing Rive animations. Next.js + Vercel.
 
-## Запуск
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000)
 
-## Деплой на Vercel
+## Deploy to Vercel
 
-1. Запушьте проект в GitHub
-2. Зайдите на [vercel.com](https://vercel.com) → New Project
-3. Импортируйте репозиторий
-4. Deploy (настройки по умолчанию подойдут)
+1. Push the project to GitHub
+2. Go to [vercel.com](https://vercel.com) → New Project
+3. Import the repository
+4. Deploy (default settings will work)
 
-Или через CLI:
+Or via CLI:
 
 ```bash
 npm i -g vercel
 vercel
 ```
 
-## Структура
+## Structure
 
-- `/` — главная страница
-- `/test` — тестер анимаций (пресеты, загрузка по URL)
+- `/` — home page
+- `/test` — animation tester (presets, load by URL)
