@@ -27,11 +27,9 @@ export default function DocsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <p className="text-zinc-600 dark:text-zinc-400 mb-8">
-          Add <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-sm">.md</code> files
-          to <code className="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-sm">content/docs/</code> to
-          create new documentation pages.
-        </p>
+        <h2 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-4">
+          Document list
+        </h2>
 
         <ul className="space-y-2">
           {docs.map((doc) => (
