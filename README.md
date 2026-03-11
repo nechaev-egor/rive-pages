@@ -2,6 +2,8 @@
 
 A site for testing and showcasing Rive animations. Next.js + Vercel.
 
+**Developer:** Yehor Nechaiev
+
 ## Run
 
 ```bash

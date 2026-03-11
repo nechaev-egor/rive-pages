@@ -29,7 +29,7 @@ export default function Home() {
           <p>Supports .riv files from CDN or local upload.</p>
           <p className="mt-1">
             <a
-              href="https://rive.app/community/"
+              href="https://rive.app/community/files/"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -39,6 +39,12 @@ export default function Home() {
             — animation examples
           </p>
         </div>
+        <footer className="pt-12 text-sm text-zinc-400 dark:text-zinc-500">
+          Developed by{" "}
+          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+            Yehor Nechaiev
+          </span>
+        </footer>
       </main>
     </div>
   );

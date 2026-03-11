@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Rive Animation Tester",
   description: "Testing and showcasing Rive animations",
+  authors: [{ name: "Yehor Nechaiev" }],
 };
 
 export default function RootLayout({
