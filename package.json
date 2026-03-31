@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@rive-app/react-webgl2": "^4.27.0",
+    "@supabase/supabase-js": "^2.101.0",
     "@tailwindcss/typography": "^0.5.19",
     "gray-matter": "^4.0.3",
+    "lottie-web": "^5.13.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
