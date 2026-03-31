@@ -5,11 +5,15 @@ CREATE TABLE IF NOT EXISTS lottie_demos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
+  is_private BOOLEAN NOT NULL DEFAULT false,
   scroll_height INTEGER NOT NULL DEFAULT 3000,
   breakpoints JSONB NOT NULL DEFAULT '[]',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE lottie_demos
+  ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT false;
 
 -- 2. Index for fast slug lookups (used on public demo pages)
 CREATE INDEX IF NOT EXISTS idx_lottie_demos_slug ON lottie_demos (slug);

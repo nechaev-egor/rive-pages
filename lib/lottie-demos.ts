@@ -17,6 +17,7 @@ export interface LottieDemo {
   id: string;
   slug: string;
   title: string;
+  is_private: boolean;
   scroll_height: number;
   breakpoints: BreakpointConfig[];
   background_color: string | null;
@@ -28,11 +29,13 @@ export interface LottieDemo {
 export type LottieDemoInsert = Omit<LottieDemo, "id" | "created_at" | "updated_at">;
 export type LottieDemoUpdate = Partial<Omit<LottieDemo, "id" | "created_at" | "updated_at">>;
 
-export async function getAllDemos(): Promise<LottieDemo[]> {
-  const { data, error } = await supabase
-    .from("lottie_demos")
-    .select("*")
-    .order("created_at", { ascending: false });
+export async function getAllDemos(includePrivate = false): Promise<LottieDemo[]> {
+  let query = supabase.from("lottie_demos").select("*");
+  if (!includePrivate) {
+    query = query.or("is_private.is.null,is_private.eq.false");
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return data ?? [];

@@ -17,8 +17,6 @@ export default function DemoCard({ demo }: DemoCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/demo/${demo.slug}`;
-
   const handleCopy = () => {
     const url = `${window.location.origin}/demo/${demo.slug}`;
     navigator.clipboard.writeText(url);
@@ -56,20 +54,14 @@ export default function DemoCard({ demo }: DemoCardProps) {
           <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{createdAt}</p>
         </div>
 
-        {/* Public URL */}
-        <div className="flex gap-1.5">
-          <code className="flex-1 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-1.5 text-zinc-500 dark:text-zinc-400 truncate">
-            /demo/{demo.slug}
-          </code>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="text-xs px-2 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-            title="Copy public URL"
-          >
-            {copied ? "Copied!" : "Copy"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="btn-secondary text-xs w-full"
+          title="Copy public URL"
+        >
+          {copied ? "Copied!" : "Copy URL"}
+        </button>
 
         {/* Actions */}
         <div className="flex gap-2">

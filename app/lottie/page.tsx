@@ -4,12 +4,18 @@ import DemoCard from "@/components/lottie/DemoCard";
 
 export const dynamic = "force-dynamic";
 
-export default async function LottieListPage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function LottieListPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const showPrivate = Object.prototype.hasOwnProperty.call(sp, "zajno-admin");
   let demos: LottieDemo[] = [];
   let fetchError: string | null = null;
 
   try {
-    demos = await getAllDemos();
+    demos = await getAllDemos(showPrivate);
   } catch (e) {
     fetchError = e instanceof Error ? e.message : "Failed to load demos";
   }
@@ -32,6 +38,11 @@ export default async function LottieListPage() {
             <p className="mt-1 text-zinc-500 dark:text-zinc-400">
               Create and manage scroll-driven Lottie animation demos
             </p>
+            {showPrivate && (
+              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                Admin mode: private demos are visible
+              </p>
+            )}
           </div>
           <Link href="/lottie/new" className="btn-primary">
             + New demo

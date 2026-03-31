@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { BreakpointConfig, LottieDemo } from "@/lib/lottie-demos";
 import BreakpointConfigPanel from "./BreakpointConfig";
@@ -27,6 +27,28 @@ function newBreakpoint(): BreakpointConfig {
   };
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getDurationSecondsFromLottieJson(content: string): number | null {
+  try {
+    const json = JSON.parse(content) as { ip?: number; op?: number; fr?: number };
+    if (
+      typeof json.ip !== "number" ||
+      typeof json.op !== "number" ||
+      typeof json.fr !== "number" ||
+      json.fr <= 0 ||
+      json.op <= json.ip
+    ) {
+      return null;
+    }
+    return (json.op - json.ip) / json.fr;
+  } catch {
+    return null;
+  }
+}
+
 const PRESET_COLORS = [
   { label: "White", value: "#ffffff" },
   { label: "Light gray", value: "#f4f4f5" },
@@ -40,16 +62,17 @@ const PRESET_COLORS = [
 
 export default function LottieEditor({ initial }: LottieEditorProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const bgImageInputRef = useRef<HTMLInputElement>(null);
+  const mainLottieInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [scrollHeight, setScrollHeight] = useState(initial?.scroll_height ?? 3000);
+  const [isPrivate, setIsPrivate] = useState(initial?.is_private ?? false);
   const [breakpoints, setBreakpoints] = useState<BreakpointConfig[]>(
-    initial?.breakpoints ?? [newBreakpoint()]
+    initial?.breakpoints?.length ? initial.breakpoints : [newBreakpoint()]
   );
-  const [bgColor, setBgColor] = useState<string | null>(
-    initial?.background_color ?? null
-  );
+  const [bgColor, setBgColor] = useState<string | null>(initial?.background_color ?? null);
   const [bgImageUrl, setBgImageUrl] = useState<string | null>(
     initial?.background_image_url ?? null
   );
@@ -57,15 +80,13 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectedDuration, setDetectedDuration] = useState<number | null>(null);
+  const [autoScrollFromDuration, setAutoScrollFromDuration] = useState(true);
+  const [devMode, setDevMode] = useState(searchParams.get("dev") === "1");
 
-  const updateBreakpoint = useCallback(
-    (id: string, updates: Partial<BreakpointConfig>) => {
-      setBreakpoints((prev) =>
-        prev.map((bp) => (bp.id === id ? { ...bp, ...updates } : bp))
-      );
-    },
-    []
-  );
+  const updateBreakpoint = useCallback((id: string, updates: Partial<BreakpointConfig>) => {
+    setBreakpoints((prev) => prev.map((bp) => (bp.id === id ? { ...bp, ...updates } : bp)));
+  }, []);
 
   const removeBreakpoint = useCallback((id: string) => {
     setBreakpoints((prev) => prev.filter((bp) => bp.id !== id));
@@ -73,10 +94,24 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
 
   const addBreakpoint = () => setBreakpoints((prev) => [...prev, newBreakpoint()]);
 
+  const ensureFirstBreakpoint = useCallback(() => {
+    setBreakpoints((prev) => (prev.length ? prev : [newBreakpoint()]));
+  }, []);
+
   const handleUpload = useCallback(
-    async (bpId: string, file: File) => {
+    async (bpId: string, file: File, source: "main" | "panel" = "panel") => {
       setUploadingId(bpId);
+      setError(null);
       try {
+        if (autoScrollFromDuration && file.name.toLowerCase().endsWith(".json")) {
+          const text = await file.text();
+          const durationSeconds = getDurationSecondsFromLottieJson(text);
+          if (durationSeconds) {
+            setDetectedDuration(durationSeconds);
+            setScrollHeight(clamp(Math.round(durationSeconds * 1000), 500, 20000));
+          }
+        }
+
         const formData = new FormData();
         formData.append("file", file);
         if (initial?.id) formData.append("demoId", initial.id);
@@ -96,10 +131,22 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
         setError(e instanceof Error ? e.message : "Upload failed");
       } finally {
         setUploadingId(null);
+        if (source === "main") {
+          mainLottieInputRef.current && (mainLottieInputRef.current.value = "");
+        }
       }
     },
-    [initial?.id, updateBreakpoint]
+    [autoScrollFromDuration, initial?.id, updateBreakpoint]
   );
+
+  const handleMainUpload = async (file: File) => {
+    ensureFirstBreakpoint();
+    const first = breakpoints[0] ?? newBreakpoint();
+    if (!breakpoints.length) {
+      setBreakpoints([first]);
+    }
+    await handleUpload(first.id, file, "main");
+  };
 
   const handleBgImageUpload = async (file: File) => {
     setUploadingBg(true);
@@ -135,6 +182,7 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
     try {
       const payload = {
         title,
+        is_private: isPrivate,
         scroll_height: scrollHeight,
         breakpoints,
         background_color: bgColor,
@@ -167,11 +215,11 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
     }
   };
 
+  const firstBreakpoint = breakpoints[0];
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      {/* Left: form */}
       <div className="space-y-6">
-        {/* Title */}
         <div>
           <label className="label">Demo title</label>
           <input
@@ -183,191 +231,229 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
           />
         </div>
 
-        {/* Scroll height */}
-        <div>
-          <label className="label">
-            Scroll container height — {scrollHeight.toLocaleString()}px
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min={500}
-              max={20000}
-              step={100}
-              value={scrollHeight}
-              onChange={(e) => setScrollHeight(Number(e.target.value))}
-              className="flex-1 accent-zinc-900 dark:accent-zinc-100"
-            />
-            <input
-              type="number"
-              value={scrollHeight}
-              min={500}
-              step={100}
-              onChange={(e) => setScrollHeight(Number(e.target.value))}
-              className="input w-28"
-            />
+        <label className="inline-flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={(e) => setIsPrivate(e.target.checked)}
+          />
+          Private (hide from list, show only with ?zajno-admin)
+        </label>
+
+        {/* Main action: Upload Lottie */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
+          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-3">
+            Upload Lottie (main action)
+          </p>
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => mainLottieInputRef.current?.click()}
+              disabled={uploadingId === firstBreakpoint?.id}
+              className="btn-primary"
+            >
+              {uploadingId === firstBreakpoint?.id ? "Uploading..." : "Upload Lottie"}
+            </button>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+              {firstBreakpoint?.lottieFileName || "No file uploaded"}
+            </span>
+          </div>
+          <input
+            ref={mainLottieInputRef}
+            type="file"
+            accept=".json,.lottie"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                void handleMainUpload(file);
+              }
+              e.target.value = "";
+            }}
+          />
+
+          <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+            Scroll height: <strong>{scrollHeight.toLocaleString()}px</strong>
+            {detectedDuration ? (
+              <span> (auto from duration: {detectedDuration.toFixed(2)}s × 1000)</span>
+            ) : null}
           </div>
         </div>
 
-        {/* Background */}
-        <div className="space-y-3">
-          <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">
-            Background
-          </h3>
-
-          {/* Preset swatches */}
-          <div>
-            <label className="label">Preset colors</label>
-            <div className="flex flex-wrap gap-2">
-              {/* Transparent */}
-              <button
-                type="button"
-                title="Transparent"
-                onClick={() => { setBgColor(null); setBgImageUrl(null); }}
-                className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                  !bgColor && !bgImageUrl
-                    ? "border-zinc-900 dark:border-zinc-100 scale-110"
-                    : "border-zinc-300 dark:border-zinc-600"
-                }`}
-                style={{
-                  backgroundImage:
-                    "repeating-conic-gradient(#d4d4d8 0% 25%, #f4f4f5 0% 50%)",
-                  backgroundSize: "8px 8px",
-                }}
-              />
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  type="button"
-                  title={c.label}
-                  onClick={() => { setBgColor(c.value); setBgImageUrl(null); }}
-                  className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                    bgColor === c.value && !bgImageUrl
-                      ? "border-zinc-900 dark:border-zinc-100 scale-110"
-                      : "border-zinc-300 dark:border-zinc-600"
-                  }`}
-                  style={{ backgroundColor: c.value }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Custom color picker */}
-          <div>
-            <label className="label">Custom color</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={bgColor ?? "#ffffff"}
-                onChange={(e) => { setBgColor(e.target.value); setBgImageUrl(null); }}
-                className="w-10 h-10 rounded-lg border border-zinc-300 dark:border-zinc-600 cursor-pointer bg-transparent p-0.5"
-              />
-              <input
-                type="text"
-                value={bgColor ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setBgColor(v || null);
-                  setBgImageUrl(null);
-                }}
-                placeholder="#ffffff"
-                className="input w-32 font-mono text-sm"
-              />
-              {bgColor && (
-                <button
-                  type="button"
-                  onClick={() => setBgColor(null)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Background image */}
-          <div>
-            <label className="label">Background image</label>
-            <div className="flex items-center gap-2">
-              {bgImageUrl ? (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div
-                    className="w-10 h-10 rounded-lg border border-zinc-300 dark:border-zinc-600 shrink-0"
-                    style={{
-                      backgroundImage: `url(${bgImageUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  />
-                  <span className="text-xs text-zinc-500 truncate flex-1">
-                    {bgImageUrl.split("/").pop()}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setBgImageUrl(null)}
-                    className="text-xs text-red-500 hover:text-red-600 shrink-0"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <span className="text-xs text-zinc-400 dark:text-zinc-500 flex-1">
-                  No image selected
-                </span>
-              )}
-              <button
-                type="button"
-                disabled={uploadingBg}
-                onClick={() => bgImageInputRef.current?.click()}
-                className="btn-secondary text-sm shrink-0"
-              >
-                {uploadingBg ? "Uploading…" : "Upload image"}
-              </button>
-              <input
-                ref={bgImageInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleBgImageUpload(file);
-                  e.target.value = "";
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Breakpoints */}
-        <div className="space-y-3">
+        {/* Dev mode controls */}
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">
-              Breakpoints
-            </h3>
-            <button type="button" onClick={addBreakpoint} className="btn-secondary text-sm">
-              + Add breakpoint
+            <div>
+              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Dev mode</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Turn on advanced settings (also works with ?dev=1)
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDevMode((v) => !v)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                devMode
+                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
+              }`}
+            >
+              {devMode ? "ON" : "OFF"}
             </button>
           </div>
-
-          {breakpoints.length === 0 && (
-            <p className="text-sm text-zinc-400 dark:text-zinc-500 py-4 text-center border border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl">
-              No breakpoints. Add at least one.
-            </p>
-          )}
-
-          {breakpoints.map((bp, i) => (
-            <BreakpointConfigPanel
-              key={bp.id}
-              breakpoint={bp}
-              index={i}
-              demoId={initial?.id ?? null}
-              uploading={uploadingId === bp.id}
-              onUpdate={updateBreakpoint}
-              onRemove={removeBreakpoint}
-              onUpload={handleUpload}
-            />
-          ))}
         </div>
+
+        {devMode && (
+          <>
+            <div className="space-y-3 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
+              <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Duration & Scroll</h3>
+              <label className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={autoScrollFromDuration}
+                  onChange={(e) => setAutoScrollFromDuration(e.target.checked)}
+                />
+                Auto-calc scroll height from Lottie duration
+              </label>
+
+              <div>
+                <label className="label">
+                  Scroll container height — {scrollHeight.toLocaleString()}px
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={500}
+                    max={20000}
+                    step={100}
+                    value={scrollHeight}
+                    onChange={(e) => setScrollHeight(Number(e.target.value))}
+                    disabled={autoScrollFromDuration}
+                    className="flex-1 accent-zinc-900 dark:accent-zinc-100 disabled:opacity-40"
+                  />
+                  <input
+                    type="number"
+                    value={scrollHeight}
+                    min={500}
+                    step={100}
+                    onChange={(e) => setScrollHeight(Number(e.target.value))}
+                    disabled={autoScrollFromDuration}
+                    className="input w-28"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Background</h3>
+              <div>
+                <label className="label">Preset colors</label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    title="Transparent"
+                    onClick={() => {
+                      setBgColor(null);
+                      setBgImageUrl(null);
+                    }}
+                    className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                      !bgColor && !bgImageUrl
+                        ? "border-zinc-900 dark:border-zinc-100 scale-110"
+                        : "border-zinc-300 dark:border-zinc-600"
+                    }`}
+                    style={{
+                      backgroundImage:
+                        "repeating-conic-gradient(#d4d4d8 0% 25%, #f4f4f5 0% 50%)",
+                      backgroundSize: "8px 8px",
+                    }}
+                  />
+                  {PRESET_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.label}
+                      onClick={() => {
+                        setBgColor(c.value);
+                        setBgImageUrl(null);
+                      }}
+                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                        bgColor === c.value && !bgImageUrl
+                          ? "border-zinc-900 dark:border-zinc-100 scale-110"
+                          : "border-zinc-300 dark:border-zinc-600"
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Background image</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500 truncate flex-1">
+                    {bgImageUrl ? bgImageUrl.split("/").pop() : "No image selected"}
+                  </span>
+                  {bgImageUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setBgImageUrl(null)}
+                      className="text-xs text-red-500 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={uploadingBg}
+                    onClick={() => bgImageInputRef.current?.click()}
+                    className="btn-secondary text-sm shrink-0"
+                  >
+                    {uploadingBg ? "Uploading..." : "Upload image"}
+                  </button>
+                  <input
+                    ref={bgImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleBgImageUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Breakpoints</h3>
+                <button type="button" onClick={addBreakpoint} className="btn-secondary text-sm">
+                  + Add breakpoint
+                </button>
+              </div>
+
+              {breakpoints.length === 0 ? (
+                <p className="text-sm text-zinc-400 dark:text-zinc-500 py-4 text-center border border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl">
+                  No breakpoints. Add at least one.
+                </p>
+              ) : (
+                breakpoints.map((bp, i) => (
+                  <BreakpointConfigPanel
+                    key={bp.id}
+                    breakpoint={bp}
+                    index={i}
+                    demoId={initial?.id ?? null}
+                    uploading={uploadingId === bp.id}
+                    onUpdate={updateBreakpoint}
+                    onRemove={removeBreakpoint}
+                    onUpload={handleUpload}
+                  />
+                ))
+              )}
+            </div>
+          </>
+        )}
 
         {error && (
           <p className="text-sm text-red-500 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
@@ -381,18 +467,13 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
           disabled={saving}
           className="btn-primary w-full"
         >
-          {saving ? "Saving…" : initial ? "Save changes" : "Create demo"}
+          {saving ? "Saving..." : initial ? "Save changes" : "Create demo"}
         </button>
 
         {initial && (
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-2 bg-zinc-50 dark:bg-zinc-800/50">
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Public demo URL
-            </p>
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Public demo</p>
             <div className="flex gap-2">
-              <code className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-zinc-600 dark:text-zinc-400 truncate">
-                /demo/{initial.slug}
-              </code>
               <button
                 type="button"
                 onClick={() => {
@@ -401,7 +482,7 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
                 }}
                 className="btn-secondary text-sm shrink-0"
               >
-                Copy
+                Copy URL
               </button>
               <a
                 href={`/demo/${initial.slug}`}
@@ -416,11 +497,8 @@ export default function LottieEditor({ initial }: LottieEditorProps) {
         )}
       </div>
 
-      {/* Right: preview */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">
-          Live preview
-        </h3>
+        <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Live preview</h3>
         <EditorPreview
           breakpoints={breakpoints}
           scrollHeight={scrollHeight}
